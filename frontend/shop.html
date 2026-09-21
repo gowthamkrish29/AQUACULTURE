@@ -231,6 +231,47 @@
 
     <script>
         const API_BASE = 'http://localhost:5000/api';
+
+        // MOCK INTERCEPTOR FOR GITHUB PAGES
+        const originalFetch = window.fetch;
+        window.fetch = async function (url, options) {
+            if (url.startsWith(API_BASE)) {
+
+                // Demo dummy state
+                window.mockState = window.mockState || {
+                    stock: [{ id: 1, species: "Tilapia", quantity: 500, price: 150.0 }, { id: 2, species: "Rohu", quantity: 300, price: 180.0 }],
+                    orders: [],
+                    stats: { credits: 50 },
+                    env: [{ pond_name: "Pond A", ph: 7.2, temp: 28.5, oxygen: 6.5 }]
+                };
+
+                const delay = (ms) => new Promise(res => setTimeout(res, ms));
+                await delay(200);
+
+                // Routes
+                if (url.includes('/labor/stats/')) return { json: async () => window.mockState.stats };
+                if (url.includes('/customer/stock')) return { json: async () => window.mockState.stock };
+                if (url.includes('/customer/orders/')) return { json: async () => window.mockState.orders };
+                if (url.includes('/environmental/latest')) return { json: async () => window.mockState.env };
+                if (url.includes('/customer/buy')) {
+                    const body = options.body ? JSON.parse(options.body) : {};
+                    const stock = window.mockState.stock.find(s => s.id === body.stock_id);
+                    if (stock && stock.quantity >= body.quantity) {
+                        stock.quantity -= body.quantity;
+                        const addedCredits = body.quantity * 2;
+                        window.mockState.stats.credits += addedCredits;
+                        const order = { id: window.mockState.orders.length + 1, date: new Date().toLocaleString(), species: stock.species, quantity: body.quantity, total_price: body.quantity * stock.price };
+                        window.mockState.orders.push(order);
+                        return { json: async () => ({ status: 'success', credits_earned: addedCredits }) };
+                    } else {
+                        return { json: async () => ({ status: 'error', message: 'Not enough stock available.' }) };
+                    }
+                }
+
+                return { json: async () => [] };
+            }
+            return originalFetch(url, options);
+        };
         const user = JSON.parse(localStorage.getItem('user'));
 
         if (!user) window.location.href = 'index.html';

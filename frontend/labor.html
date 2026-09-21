@@ -316,6 +316,62 @@
 
     <script>
         const API_BASE = 'http://localhost:5000/api';
+
+        // MOCK INTERCEPTOR FOR GITHUB PAGES
+        const originalFetch = window.fetch;
+        window.fetch = async function (url, options) {
+            if (url.startsWith(API_BASE)) {
+
+                // Demo dummy state
+                window.mockState = window.mockState || {
+                    stock: [{ id: 1, species: "Tilapia", quantity: 50, price: 150.0 }, { id: 2, species: "Rohu", quantity: 300, price: 180.0 }],
+                    feed: [{ id: 1, name: "Starter Pellets", quantity: 200, unit_price: 50.0 }],
+                    medicine: [{ id: 1, name: "Aqua-Cure", quantity: 50, unit_price: 300.0 }],
+                    harvest: [{ id: 1, date: "2026-09-20", species: "Tilapia", quantity: 300, notes: "Good yield" }],
+                    tasks: [{ id: 1, description: "Feed Pond 1", priority: "Urgent", status: "Pending", steps: "1. Take 5kg feed\n2. Distribute evenly" }],
+                    env: [{ pond_name: "Pond A", ph: 7.2, temp: 28.5 }, { pond_name: "Pond B", ph: 6.8, temp: 27.2 }],
+                    attendance: { is_clocked_in: true },
+                    stats: { credits: 120, tasks_done: 45, is_clocked_in: true }
+                };
+
+                const delay = (ms) => new Promise(res => setTimeout(res, ms));
+                await delay(200);
+
+                // Routes
+                if (url.includes('/labor/stats')) return { json: async () => window.mockState.stats };
+                if (url.includes('/labor/attendance/toggle')) {
+                    window.mockState.stats.is_clocked_in = !window.mockState.stats.is_clocked_in;
+                    return { json: async () => ({ status: 'success', is_clocked_in: window.mockState.stats.is_clocked_in }) };
+                }
+                if (url.includes('/environmental/latest')) return { json: async () => window.mockState.env };
+                if (url.includes('/labor/tasks/') && url.includes('/complete')) {
+                    return { json: async () => ({ status: 'success' }) };
+                }
+                if (url.includes('/labor/tasks')) return { json: async () => window.mockState.tasks };
+                if (url.includes('/labor/activity')) return { json: async () => ({ status: 'success' }) };
+
+                // Reuse admin routes for stock/feed/medicine/harvest
+                if (url.includes('/admin/stock')) {
+                    if (options?.method === 'DELETE' || options?.method === 'PUT' || options?.method === 'POST') return { json: async () => ({ status: 'success' }) };
+                    return { json: async () => window.mockState.stock };
+                }
+                if (url.includes('/admin/feed')) {
+                    if (options?.method === 'DELETE' || options?.method === 'PUT' || options?.method === 'POST') return { json: async () => ({ status: 'success' }) };
+                    return { json: async () => window.mockState.feed };
+                }
+                if (url.includes('/admin/medicine')) {
+                    if (options?.method === 'DELETE' || options?.method === 'PUT' || options?.method === 'POST') return { json: async () => ({ status: 'success' }) };
+                    return { json: async () => window.mockState.medicine };
+                }
+                if (url.includes('/admin/harvest')) {
+                    if (options?.method === 'DELETE' || options?.method === 'PUT' || options?.method === 'POST') return { json: async () => ({ status: 'success' }) };
+                    return { json: async () => window.mockState.harvest };
+                }
+
+                return { json: async () => [] };
+            }
+            return originalFetch(url, options);
+        };
         const user = JSON.parse(localStorage.getItem('user'));
 
         if (!user || user.role !== 'labor') {

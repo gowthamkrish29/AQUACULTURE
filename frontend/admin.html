@@ -325,6 +325,47 @@
     <script>
         const API_BASE = 'http://localhost:5000/api';
 
+        // MOCK INTERCEPTOR FOR GITHUB PAGES
+        const originalFetch = window.fetch;
+        window.fetch = async function (url, options) {
+            if (url.startsWith(API_BASE)) {
+
+                // Demo dummy state
+                window.mockState = window.mockState || {
+                    stock: [{ id: 1, species: "Tilapia", quantity: 500, price: 150.0 }, { id: 2, species: "Rohu", quantity: 300, price: 180.0 }],
+                    feed: [{ id: 1, name: "Starter Pellets", quantity: 200, unit_price: 50.0 }, { id: 2, name: "Grower Feed", quantity: 400, unit_price: 45.0 }],
+                    medicine: [{ id: 1, name: "Aqua-Cure", quantity: 50, unit_price: 300.0 }],
+                    harvest: [{ id: 1, date: "2026-09-20", species: "Tilapia", quantity: 300, notes: "Good yield" }],
+                    expenses: [{ id: 1, date: "2026-09-18", category: "Feed", amount: 5000.0, description: "Monthly supply" }],
+                    notifications: [{ time: new Date().toLocaleTimeString(), message: "System initialized successfully." }],
+                    labor: [{ id: 1, username: "labor1", role: "labor" }, { id: 2, username: "labor2", role: "labor" }]
+                };
+
+                const delay = (ms) => new Promise(res => setTimeout(res, ms));
+                await delay(200);
+
+                // Routes
+                if (url.includes('/admin/overview')) return { json: async () => ({ total_stock: 800, labor_count: 2, pending_tasks: 3 }) };
+                if (url.includes('/admin/stock')) {
+                    if (options?.method === 'DELETE' || options?.method === 'PUT' || options?.method === 'POST') return { json: async () => ({ status: 'success' }) };
+                    return { json: async () => window.mockState.stock };
+                }
+                if (url.includes('/admin/feed')) return { json: async () => window.mockState.feed };
+                if (url.includes('/admin/medicine')) return { json: async () => window.mockState.medicine };
+                if (url.includes('/admin/harvest')) return { json: async () => window.mockState.harvest };
+                if (url.includes('/admin/expenses')) {
+                    if (options?.method === 'DELETE' || options?.method === 'PUT' || options?.method === 'POST') return { json: async () => ({ status: 'success' }) };
+                    return { json: async () => window.mockState.expenses };
+                }
+                if (url.includes('/admin/notifications')) return { json: async () => window.mockState.notifications };
+                if (url.includes('/admin/labor')) return { json: async () => window.mockState.labor };
+                if (url.includes('/admin/tasks')) return { json: async () => ({ status: 'success' }) };
+
+                return { json: async () => [] };
+            }
+            return originalFetch(url, options);
+        };
+
         function setActive(el) {
             document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
             el.classList.add('active');
