@@ -10,13 +10,18 @@ if (loginForm) {
         const alertBox = document.getElementById('login-alert');
 
         try {
-            const response = await fetch(`${API_BASE}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-
-            const data = await response.json();
+            // Mock authentication for GitHub Pages since backend is not available
+            let data = {};
+            if (username === 'admin' && password === 'admin') {
+                data = { status: 'success', user: { role: 'admin', username: 'admin' } };
+            } else if (username === 'labor' && password === 'labor') {
+                data = { status: 'success', user: { role: 'labor', username: 'labor' } };
+            } else if (username && password) {
+                data = { status: 'success', user: { role: 'customer', username: username } };
+            } else {
+                data = { status: 'error', message: 'Invalid credentials' };
+            }
+            await new Promise(r => setTimeout(r, 300)); // Simulate network delay
 
             if (data.status === 'success') {
                 localStorage.setItem('user', JSON.stringify(data.user));
@@ -49,13 +54,14 @@ if (registerForm) {
         const alertBox = document.getElementById('register-alert');
 
         try {
-            const response = await fetch(`${API_BASE}/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, role: 'customer' })
-            });
-
-            const data = await response.json();
+            // Mock registration for GitHub Pages
+            let data = {};
+            if (username && password) {
+                data = { status: 'success', user: { role: 'customer', username: username } };
+            } else {
+                data = { status: 'error', message: 'Please provide valid details' };
+            }
+            await new Promise(r => setTimeout(r, 300)); // Simulate delay
 
             if (data.status === 'success') {
                 alert('Registration successful! Please login.');
