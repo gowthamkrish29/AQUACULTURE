@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labor Dashboard - Aquaculture Farm Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: block;
+            padding-top: 80px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .glass-card {
+            max-width: none;
+            margin-bottom: 2rem;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        /* Data Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1.2rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            color: var(--primary);
+            text-transform: capitalize;
+            font-weight: 600;
+        }
+
+        .btn-small {
+            width: auto;
+            margin: 0 0.2rem;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            background: #3b82f6;
+            border-radius: 0.4rem;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div style="font-weight: 700; color: var(--primary);">AQUACULTURE FARM LABOR</div>
+        <div id="attendance-status" style="margin-left: 1rem; font-size: 0.875rem; color: #94a3b8;">Status: Loading...
+        </div>
+        <div style="flex-grow: 1;"></div>
+        <button id="attendance-btn" onclick="toggleAttendance()"
+            style="width: auto; margin: 0 1rem; padding: 0.5rem 1rem; background: var(--accent);">Clock In</button>
+        <button onclick="logout()" style="width: auto; margin: 0; padding: 0.5rem 1rem;">Logout</button>
+    </nav>
+
+    <div class="container"
+        style="max-width: 1200px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+        <!-- Performance Dashboard -->
+        <div class="glass-card"
+            style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="stat-card">
+                <div class="stat-label">AquaCredits 💎</div>
+                <div class="stat-val" id="user-credits" style="font-size: 1.5rem;">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Tasks Completed ✅</div>
+                <div class="stat-val" id="tasks-done" style="font-size: 1.5rem;">0</div>
+            </div>
+            <div class="stat-card" id="labor-badge-card">
+                <div class="stat-label">Stability Rank</div>
+                <div class="stat-val" style="font-size: 1.2rem; color: var(--accent);">Apprentice</div>
+            </div>
+        </div>
+
+        <!-- Environmental Data -->
+        <div class="glass-card">
+            <h3>Pond Environment 💧</h3>
+            <p class="subtitle">Live pH & Temperature readings</p>
+            <div id="env-data-list" style="margin-top: 1rem;">
+                <p style="color: #94a3b8; font-size: 0.875rem;">Connecting to sensors...</p>
+            </div>
+        </div>
+
+        <!-- Inventory Alerts -->
+        <div class="glass-card">
+            <h3>Inventory Alerts ⚠️</h3>
+            <p class="subtitle">Items requiring replenishment</p>
+            <div id="inventory-alerts" style="margin-top: 1rem;">
+                <p style="color: #10b981; font-size: 0.875rem;">All stock levels healthy.</p>
+            </div>
+        </div>
+
+        <!-- My Tasks -->
+        <div class="glass-card" style="grid-column: 1 / -1;">
+            <h2>Assigned Tasks 📋</h2>
+            <div id="task-list" style="margin-top: 1rem;">
+                <p style="color: #94a3b8; text-align: center; padding: 2rem;">Loading your tasks...</p>
+            </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="glass-card" style="grid-column: 1 / -1;">
+            <h3>Quick Activity Log</h3>
+            <form id="activity-form"
+                style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 1rem; align-items: end;">
+                <div class="form-group" style="margin:0;">
+                    <label>Type</label>
+                    <select id="act-type">
+                        <option value="Feeding">Feeding</option>
+                        <option value="Medicine">Medicine</option>
+                        <option value="Inspection">Inspection</option>
+                        <option value="Harvest">Harvest</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label>Details</label>
+                    <input type="text" id="act-details" placeholder="e.g. Fed Pond 1 with 5kg Tilapia Feed">
+                </div>
+                <button type="submit">Log</button>
+            </form>
+        </div>
+
+        <!-- Fish Stock Management -->
+        <h2 style="grid-column: 1 / -1; color: var(--primary); margin-top: 2rem;">Fish Stock Management 🎏</h2>
+        <div class="glass-card">
+            <h3>Add New Species</h3>
+            <form id="stock-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group">
+                    <label>Species Name</label>
+                    <input type="text" id="species-name" required placeholder="e.g. Tilapia">
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="quantity" required placeholder="e.g. 500">
+                </div>
+                <div class="form-group">
+                    <label>Price per Unit (₹)</label>
+                    <input type="number" step="0.01" id="price" required placeholder="e.g. 150.00">
+                </div>
+                <button type="submit">Add Stock</button>
+            </form>
+        </div>
+        <div class="glass-card" style="grid-column: span 2;">
+            <h3>Current Stock Status</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="color: var(--primary);">ID</th>
+                        <th>Species</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="stock-table-body"></tbody>
+            </table>
+        </div>
+
+        <!-- Feeding Section -->
+        <h2 style="grid-column: 1 / -1; color: var(--primary); margin-top: 2rem;">Feeding & Nutrition 🥣</h2>
+        <div class="glass-card">
+            <h3>Add Feed Stock</h3>
+            <form id="feed-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group">
+                    <label>Feed Name</label>
+                    <input type="text" id="feed-name" required placeholder="e.g. NutraGrow X1">
+                </div>
+                <div class="form-group">
+                    <label>Quantity (kg)</label>
+                    <input type="number" step="0.1" id="feed-qty" required placeholder="e.g. 10.5">
+                </div>
+                <div class="form-group">
+                    <label>Price (₹/kg)</label>
+                    <input type="number" step="0.01" id="feed-price" required placeholder="e.g. 45.00">
+                </div>
+                <button type="submit">Add Feed</button>
+            </form>
+        </div>
+        <div class="glass-card" style="grid-column: span 2;">
+            <h3>Feed Inventory</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="color: var(--primary);">ID</th>
+                        <th>Feed Name</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="feed-table-body"></tbody>
+            </table>
+        </div>
+
+        <!-- Medicine Section -->
+        <h2 style="grid-column: 1 / -1; color: var(--primary); margin-top: 2rem;">Medicine & Health 💊</h2>
+        <div class="glass-card">
+            <h3>Add Medicine</h3>
+            <form id="medicine-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group">
+                    <label>Medicine Name</label>
+                    <input type="text" id="med-name" required placeholder="e.g. AquaCure 500">
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="med-qty" required placeholder="e.g. 20">
+                </div>
+                <div class="form-group">
+                    <label>Price (₹)</label>
+                    <input type="number" step="0.01" id="med-price" required placeholder="e.g. 300.00">
+                </div>
+                <button type="submit">Add Medicine</button>
+            </form>
+        </div>
+        <div class="glass-card" style="grid-column: span 2;">
+            <h3>Medical Stock</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="color: var(--primary);">ID</th>
+                        <th>Medicine</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="medicine-table-body"></tbody>
+            </table>
+        </div>
+
+        <!-- Harvest Section -->
+        <h2 style="grid-column: 1 / -1; color: var(--primary); margin-top: 2rem;">Harvest Planning 🚜</h2>
+        <div class="glass-card">
+            <h3>Log Harvest</h3>
+            <form id="harvest-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group">
+                    <label>Species</label>
+                    <input type="text" id="harv-species" required placeholder="e.g. Catfish">
+                </div>
+                <div class="form-group">
+                    <label>Yield (kg)</label>
+                    <input type="number" step="0.1" id="harv-qty" required placeholder="e.g. 1200">
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <input type="text" id="harv-notes" placeholder="e.g. Pond 5, healthy batch">
+                </div>
+                <button type="submit">Log Harvest</button>
+            </form>
+        </div>
+        <div class="glass-card" style="grid-column: span 2;">
+            <h3>Harvest History</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="color: var(--primary);">ID</th>
+                        <th>Date</th>
+                        <th>Species</th>
+                        <th>Yield</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="harvest-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        if (!user || user.role !== 'labor') {
+            window.location.href = 'index.html';
+        }
+
+        async function loadDashboard() {
+            loadAttendance();
+            loadStats();
+            loadTasks();
+            loadEnvData();
+            loadInventoryAlerts();
+            loadStocks();
+            loadFeeds();
+            loadMedicines();
+            loadHarvests();
+        }
+
+        async function loadStocks() {
+            const res = await fetch(`${API_BASE}/admin/stock`);
+            const stocks = await res.json();
+            document.getElementById('stock-table-body').innerHTML = stocks.map(s => `
+                <tr>
+                    <td style="color: #94a3b8;">#${s.id}</td>
+                    <td>${s.species}</td>
+                    <td>${s.quantity}</td>
+                    <td>₹${s.price.toFixed(2)}</td>
+                    <td>
+                        <button onclick="editStock(${s.id}, '${s.species}', ${s.quantity}, ${s.price})" class="btn-small">Edit</button>
+                        <button onclick="deleteStock(${s.id})" class="btn-small btn-danger">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadFeeds() {
+            const res = await fetch(`${API_BASE}/admin/feed`);
+            const feeds = await res.json();
+            document.getElementById('feed-table-body').innerHTML = feeds.map(f => `
+                <tr>
+                    <td style="color: #94a3b8;">#${f.id}</td>
+                    <td>${f.name}</td>
+                    <td>${f.quantity} kg</td>
+                    <td>₹${f.unit_price.toFixed(2)}</td>
+                    <td>
+                        <button onclick="editFeed(${f.id}, '${f.name}', ${f.quantity}, ${f.unit_price})" class="btn-small">Edit</button>
+                        <button onclick="deleteFeed(${f.id})" class="btn-small btn-danger">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadMedicines() {
+            const res = await fetch(`${API_BASE}/admin/medicine`);
+            const meds = await res.json();
+            document.getElementById('medicine-table-body').innerHTML = meds.map(m => `
+                <tr>
+                    <td style="color: #94a3b8;">#${m.id}</td>
+                    <td>${m.name}</td>
+                    <td>${m.quantity}</td>
+                    <td>₹${m.unit_price.toFixed(2)}</td>
+                    <td>
+                        <button onclick="editMedicine(${m.id}, '${m.name}', ${m.quantity}, ${m.unit_price})" class="btn-small">Edit</button>
+                        <button onclick="deleteMedicine(${m.id})" class="btn-small btn-danger">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadHarvests() {
+            const res = await fetch(`${API_BASE}/admin/harvest`);
+            const harvests = await res.json();
+            document.getElementById('harvest-table-body').innerHTML = harvests.map(h => `
+                <tr>
+                    <td style="color: #94a3b8;">#${h.id}</td>
+                    <td>${h.date}</td>
+                    <td>${h.species}</td>
+                    <td>${h.quantity} kg</td>
+                    <td>
+                        <button onclick="editHarvest(${h.id}, '${h.species}', ${h.quantity}, '${h.notes}')" class="btn-small">Edit</button>
+                        <button onclick="deleteHarvest(${h.id})" class="btn-small btn-danger">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // CRUD Event Listeners
+        document.getElementById('stock-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                species: document.getElementById('species-name').value,
+                quantity: document.getElementById('quantity').value,
+                price_per_unit: document.getElementById('price').value
+            };
+            await fetch(`${API_BASE}/admin/stock`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            alert('Stock added!');
+            e.target.reset();
+            loadStocks();
+        });
+
+        document.getElementById('feed-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('feed-name').value,
+                quantity: parseFloat(document.getElementById('feed-qty').value),
+                unit_price: parseFloat(document.getElementById('feed-price').value)
+            };
+            await fetch(`${API_BASE}/admin/feed`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            alert('Feed added!');
+            e.target.reset();
+            loadFeeds();
+        });
+
+        document.getElementById('medicine-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('med-name').value,
+                quantity: parseInt(document.getElementById('med-qty').value),
+                unit_price: parseFloat(document.getElementById('med-price').value)
+            };
+            await fetch(`${API_BASE}/admin/medicine`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            alert('Medicine added!');
+            e.target.reset();
+            loadMedicines();
+        });
+
+        document.getElementById('harvest-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                species: document.getElementById('harv-species').value,
+                quantity: parseFloat(document.getElementById('harv-qty').value),
+                notes: document.getElementById('harv-notes').value
+            };
+            await fetch(`${API_BASE}/admin/harvest`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            alert('Harvest logged!');
+            e.target.reset();
+            loadHarvests();
+        });
+
+        // Edit/Delete functions (Simplified)
+        async function editStock(id, oldS, oldQ, oldP) {
+            const species = prompt("Species:", oldS); if (!species) return;
+            const quantity = prompt("Quantity:", oldQ); if (!quantity) return;
+            const price = prompt("Price:", oldP); if (!price) return;
+            await fetch(`${API_BASE}/admin/stock/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ species, quantity: parseInt(quantity), price: parseFloat(price) })
+            });
+            loadStocks();
+        }
+
+        async function deleteStock(id) {
+            if (confirm('Delete stock?')) {
+                await fetch(`${API_BASE}/admin/stock/${id}`, { method: 'DELETE' });
+                loadStocks();
+            }
+        }
+
+        async function editFeed(id, oldN, oldQ, oldP) {
+            const name = prompt("Name:", oldN); if (!name) return;
+            const quantity = prompt("Quantity:", oldQ); if (!quantity) return;
+            const price = prompt("Price:", oldP); if (!price) return;
+            await fetch(`${API_BASE}/admin/feed/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, quantity: parseFloat(quantity), unit_price: parseFloat(price) })
+            });
+            loadFeeds();
+        }
+
+        async function deleteFeed(id) {
+            if (confirm('Delete feed?')) {
+                await fetch(`${API_BASE}/admin/feed/${id}`, { method: 'DELETE' });
+                loadFeeds();
+            }
+        }
+
+        async function editMedicine(id, oldN, oldQ, oldP) {
+            const name = prompt("Name:", oldN); if (!name) return;
+            const quantity = prompt("Quantity:", oldQ); if (!quantity) return;
+            const price = prompt("Price:", oldP); if (!price) return;
+            await fetch(`${API_BASE}/admin/medicine/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, quantity: parseInt(quantity), unit_price: parseFloat(price) })
+            });
+            loadMedicines();
+        }
+
+        async function deleteMedicine(id) {
+            if (confirm('Delete medicine?')) {
+                await fetch(`${API_BASE}/admin/medicine/${id}`, { method: 'DELETE' });
+                loadMedicines();
+            }
+        }
+
+        async function editHarvest(id, oldS, oldQ, oldN) {
+            const species = prompt("Species:", oldS); if (!species) return;
+            const quantity = prompt("Yield:", oldQ); if (!quantity) return;
+            const notes = prompt("Notes:", oldN); if (notes === null) return;
+            await fetch(`${API_BASE}/admin/harvest/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ species, quantity: parseFloat(quantity), notes })
+            });
+            loadHarvests();
+        }
+
+        async function deleteHarvest(id) {
+            if (confirm('Delete harvest?')) {
+                await fetch(`${API_BASE}/admin/harvest/${id}`, { method: 'DELETE' });
+                loadHarvests();
+            }
+        }
+
+        async function loadAttendance() {
+            const res = await fetch(`${API_BASE}/labor/stats/${user.id}`);
+            const data = await res.json();
+            const statusDiv = document.getElementById('attendance-status');
+            const btn = document.getElementById('attendance-btn');
+
+            if (data.is_clocked_in) {
+                statusDiv.innerHTML = '<span style="color: #10b981;">● Online</span> (Clocked In)';
+                btn.textContent = 'Clock Out';
+                btn.style.background = 'var(--danger)';
+            } else {
+                statusDiv.innerHTML = '<span style="color: #ef4444;">● Offline</span> (Clocked Out)';
+                btn.textContent = 'Clock In';
+                btn.style.background = 'var(--accent)';
+            }
+        }
+
+        async function toggleAttendance() {
+            const res = await fetch(`${API_BASE}/labor/attendance/toggle`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user.id })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                loadAttendance();
+                alert(data.is_clocked_in ? 'Clocked in successfully!' : 'Clocked out successfully!');
+            }
+        }
+
+        async function loadStats() {
+            const res = await fetch(`${API_BASE}/labor/stats/${user.id}`);
+            const data = await res.json();
+            document.getElementById('user-credits').textContent = data.credits;
+            document.getElementById('tasks-done').textContent = data.tasks_done;
+
+            const badgeCard = document.getElementById('labor-badge-card');
+            if (data.credits > 100) {
+                badgeCard.querySelector('.stat-val').textContent = 'Expert Farmer 🎖️';
+                badgeCard.querySelector('.stat-val').style.color = '#fbbf24';
+            }
+        }
+
+        async function loadEnvData() {
+            const res = await fetch(`${API_BASE}/environmental/latest`);
+            const data = await res.json();
+            const list = document.getElementById('env-data-list');
+            list.innerHTML = data.map(d => `
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--glass-border);">
+                    <span style="font-weight: 600;">${d.pond_name}</span>
+                    <span style="font-size: 0.875rem;">
+                        <span style="color: var(--primary);">pH ${d.ph}</span> | 
+                        <span style="color: var(--accent);">${d.temp}°C</span>
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        async function loadInventoryAlerts() {
+            const res = await fetch(`${API_BASE}/admin/stock`);
+            const stocks = await res.json();
+            const alerts = stocks.filter(s => s.quantity < 100);
+            const list = document.getElementById('inventory-alerts');
+
+            if (alerts.length > 0) {
+                list.innerHTML = alerts.map(s => `
+                    <div style="padding: 0.5rem; background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; border-radius: 4px; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                        <strong>LOW STOCK:</strong> ${s.species} (${s.quantity} left)
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = '<p style="color: #10b981; font-size: 0.875rem;">All stock levels healthy.</p>';
+            }
+        }
+
+        async function loadTasks() {
+            const res = await fetch(`${API_BASE}/labor/tasks/${user.id}`);
+            const tasks = await res.json();
+            const list = document.getElementById('task-list');
+
+            if (tasks.length === 0) {
+                list.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 2rem;">No tasks assigned yet.</p>';
+                return;
+            }
+
+            list.innerHTML = tasks.map(t => {
+                const pColor = t.priority === 'Urgent' ? '#ef4444' : (t.priority === 'Low' ? '#94a3b8' : '#3b82f6');
+                return `
+                <div class="task-item" style="display: block; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid var(--glass-border); border-radius: 1rem; background: rgba(255,255,255,0.02);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                        <div>
+                            <span style="background: ${pColor}; color: white; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase;">${t.priority}</span>
+                            <div style="font-weight: 600; font-size: 1.1rem; margin-top: 0.4rem;">${t.description}</div>
+                        </div>
+                        <span class="status-badge status-${t.status.toLowerCase()}">${t.status}</span>
+                    </div>
+                    
+                    ${t.steps ? `
+                        <div style="margin: 1rem 0; padding: 0.8rem; background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 0.875rem; border-left: 2px solid var(--primary);">
+                            <div style="font-weight: 600; color: var(--primary); margin-bottom: 0.4rem;">Instructions:</div>
+                            ${t.steps.split('\n').map(step => `<div>• ${step}</div>`).join('')}
+                        </div>
+                    ` : ''}
+
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        ${t.status === 'Pending' ? `<button onclick="completeTask(${t.id})" style="width: auto; padding: 0.5rem 1.5rem;">Complete & Earn 💎</button>` : ''}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        async function completeTask(id) {
+            await fetch(`${API_BASE}/labor/tasks/${id}/complete`, { method: 'POST' });
+            loadDashboard();
+            alert('Task completed! You earned 10 AquaCredits! 💎');
+        }
+
+        document.getElementById('activity-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const type = document.getElementById('act-type').value;
+            const details = document.getElementById('act-details').value;
+            await fetch(`${API_BASE}/labor/activity`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, details, user_id: user.id })
+            });
+            alert('Activity Logged!');
+            document.getElementById('act-details').value = '';
+        });
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        window.onload = loadDashboard;
+        setInterval(loadEnvData, 5000); // Live updates for environment
+    </script>
+</body>
+
+</html>

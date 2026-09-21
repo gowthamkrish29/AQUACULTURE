@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Aquaculture Farm Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="login-card" class="glass-card">
+        <h1>AQUACULTURE FARM MANAGEMENT SYSTEM</h1>
+        <p class="subtitle">Digitalizing Aquaculture Excellence</p>
+
+        <div id="login-alert" class="alert alert-error"></div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required placeholder="Enter password">
+            </div>
+            <button type="submit">Login to Dashboard</button>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.875rem;">
+            <p style="color: #94a3b8">New customer? <a href="#" onclick="toggleForms()"
+                    style="color: var(--primary); text-decoration: none;">Register here</a></p>
+        </div>
+    </div>
+
+    <div id="register-card" class="glass-card" style="display: none;">
+        <h1>JOIN AQUACULTURE FARM</h1>
+        <p class="subtitle">Create your customer account</p>
+
+        <div id="register-alert" class="alert alert-error"></div>
+
+        <form id="register-form">
+            <div class="form-group">
+                <label for="reg-username">Username</label>
+                <input type="text" id="reg-username" required placeholder="Choose a username">
+            </div>
+            <div class="form-group">
+                <label for="reg-password">Password</label>
+                <input type="password" id="reg-password" required placeholder="Choose a password">
+            </div>
+            <button type="submit">Create Account</button>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.875rem;">
+            <p style="color: #25b62a">Already have an account? <a href="#" onclick="toggleForms()"
+                    style="color: var(--primary); text-decoration: none;">Login here</a></p>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - Aquaculture Farm Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: block;
+            padding-top: 80px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(167, 139, 250, 0.1));
+            border-radius: 2rem;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .credit-badge {
+            background: rgba(251, 191, 36, 0.1);
+            color: #fbbf24;
+            padding: 1rem 2rem;
+            border-radius: 1.5rem;
+            border: 1px solid #fbbf24;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .product-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 2rem;
+            padding: 2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--primary);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .product-card:hover::before {
+            opacity: 1;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 160px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+
+        .price-tag {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin: 0.5rem 0;
+        }
+
+        .stock-info {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .cert-btn {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .cert-btn:hover {
+            background: #10b981;
+            color: white;
+        }
+
+        /* Order History Table */
+        .history-card {
+            margin-top: 4rem;
+            max-width: none;
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        .order-table th,
+        .order-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .order-table th {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            padding: 3rem;
+            border-radius: 2rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 0 50px rgba(16, 185, 129, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div style="font-weight: 700; color: var(--primary); letter-spacing: 1px;">AQUACULTURE FARM SHOP</div>
+        <div style="flex-grow: 1;"></div>
+        <button onclick="logout()" style="width: auto; margin: 0; padding: 0.5rem 1rem;">Logout</button>
+    </nav>
+
+    <div class="container">
+        <!-- Hero & Credits -->
+        <div class="hero-section">
+            <div>
+                <h1 style="margin: 0; font-size: 2.5rem;">Welcome Back, <span id="user-name-display"
+                        style="color: var(--primary);">Member</span>!</h1>
+                <p style="color: #94a3b8; margin-top: 0.5rem;">Fresh from our farm to your table, with every purchase
+                    verified.</p>
+            </div>
+            <div class="credit-badge">
+                <span>AquaCredits 💎</span>
+                <span id="user-credits">0</span>
+            </div>
+        </div>
+
+        <h2 style="margin-bottom: 2rem;">Available Harvests</h2>
+        <div id="shop-grid" class="shop-grid">
+            <!-- Products injected here -->
+        </div>
+
+        <!-- Order History -->
+        <div class="history-card glass-card">
+            <h2>My Purchase History 📜</h2>
+            <div id="orders-container">
+                <p style="color: #94a3b8; padding: 2rem; text-align: center;">No orders yet. Start shopping!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quality Certificate Modal -->
+    <div id="cert-modal" class="modal">
+        <div class="modal-content">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🛡️</div>
+            <h2 style="color: #10b981;">Quality Certificate</h2>
+            <div id="cert-details"
+                style="margin: 2rem 0; text-align: left; padding: 1.5rem; background: rgba(0,0,0,0.2); border-radius: 1rem; border-left: 4px solid #10b981;">
+                <!-- Details here -->
+            </div>
+            <p style="font-style: italic; color: #94a3b8;">This batch has been verified for quality standards and fresh
+                harvest.</p>
+            <button onclick="closeModal()" style="margin-top: 1rem;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        if (!user) window.location.href = 'index.html';
+
+        async function loadShopData() {
+            document.getElementById('user-name-display').textContent = user.username;
+            loadCredits();
+            loadShop();
+            loadOrders();
+        }
+
+        async function loadCredits() {
+            const res = await fetch(`${API_BASE}/labor/stats/${user.id}`);
+            const data = await res.json();
+            document.getElementById('user-credits').textContent = data.credits;
+        }
+
+        async function loadShop() {
+            const res = await fetch(`${API_BASE}/customer/stock`);
+            const stocks = await res.json();
+            const grid = document.getElementById('shop-grid');
+
+            const icons = { 'Tilapia': '🐟', 'Catfish': '🦞', 'Salmon': '🍣', 'Shrimp': '🦐' };
+
+            grid.innerHTML = stocks.map(s => `
+                <div class="product-card">
+                    <div class="product-image">${icons[s.species] || '🐠'}</div>
+                    <h3 style="margin-bottom: 0.5rem;">Fresh ${s.species}</h3>
+                    <div class="price-tag">₹${s.price.toFixed(2)} <span style="font-size: 0.9rem; font-weight: normal; color: #94a3b8;">/ kg</span></div>
+                    <div class="stock-info">
+                        <span style="color: #10b981;">●</span> ${s.quantity} kg available
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity to Shop</label>
+                        <input type="number" id="qty-${s.id}" value="1" min="1" max="${s.quantity}" style="margin-bottom: 1rem;">
+                    </div>
+                    <div class="btn-group">
+                        <button onclick="buyNow(${s.id})" class="buy-btn">Place Order</button>
+                        <button onclick="showCert('${s.species}')" class="cert-btn">View Quality</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function buyNow(id) {
+            const qty = parseInt(document.getElementById(`qty-${id}`).value);
+            const res = await fetch(`${API_BASE}/customer/buy`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stock_id: id, quantity: qty, user_id: user.id })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                alert(`🎊 Order Confirmed!\nYou earned ${data.credits_earned} AquaCredits 💎`);
+                loadShopData();
+            } else {
+                alert(data.message);
+            }
+        }
+
+        async function loadOrders() {
+            const res = await fetch(`${API_BASE}/customer/orders/${user.id}`);
+            const orders = await res.json();
+            const container = document.getElementById('orders-container');
+
+            if (orders.length === 0) return;
+
+            container.innerHTML = `
+                <table class="order-table">
+                    <thead>
+                        <tr>
+                            <th style="color: var(--primary);">ID</th>
+                            <th style="color: var(--primary);">Date</th>
+                            <th style="color: var(--primary);">Item</th>
+                            <th style="color: var(--primary);">Quantity</th>
+                            <th style="color: var(--primary);">Total Price</th>
+                            <th style="color: var(--primary);">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${orders.map(o => {
+                // Split date into multiple lines if needed for that compressed look
+                const dateParts = o.date.split(' ');
+                return `
+                            <tr>
+                                <td style="color: #94a3b8;">#${o.id}</td>
+                                <td style="font-size: 0.85rem; line-height: 1.2; color: #cbd5e1;">
+                                    ${dateParts[0].substring(0, 5)}<br>${dateParts[0].substring(5)}<br>${dateParts[1]}
+                                </td>
+                                <td style="font-weight: 700; color: white; font-size: 1rem;">${o.species}</td>
+                                <td style="color: #cbd5e1;">${o.quantity} kg</td>
+                                <td style="color: #10b981; font-weight: 700; font-size: 1.1rem;">₹${o.total_price.toFixed(2)}</td>
+                                <td><span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.4rem 0.8rem; border-radius: 0.5rem; font-size: 0.75rem; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 600;">Completed</span></td>
+                            </tr>
+                        `}).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        async function showCert(species) {
+            const res = await fetch(`${API_BASE}/environmental/latest`);
+            const data = await res.json();
+            const pond = data[0]; // Just use first pond for demo
+
+            const details = document.getElementById('cert-details');
+            details.innerHTML = `
+                <div style="margin-bottom: 0.8rem;"><strong>Species:</strong> Fresh ${species}</div>
+                <div style="margin-bottom: 0.8rem;"><strong>Source:</strong> ${pond.pond_name}</div>
+                <div style="margin-bottom: 0.8rem;"><strong>Pond pH:</strong> ${pond.ph} (Perfect)</div>
+                <div style="margin-bottom: 0.8rem;"><strong>Temperature:</strong> ${pond.temp}°C</div>
+                <div style="margin-bottom: 0.8rem;"><strong>Oxygen Level:</strong> ${pond.oxygen} mg/L</div>
+                <div><strong>Standard:</strong> Grade A+ Certified</div>
+            `;
+            document.getElementById('cert-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('cert-modal').style.display = 'none';
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        window.onload = loadShopData;
+    </script>
+</body>
+
+</html>
